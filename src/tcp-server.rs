@@ -1,37 +1,30 @@
-//! First start a server:
-//! cargo run --example tcp-server
-//! cargo run --example tcp-client
-
-//1. When `Ping` message is received, reply instantly with `Pong`
-//
-//1. Start a timer
-//    1. When any new message is received, reset the timer to 0
-//    2. Once the timer reaches 10 secs then drop the connection
-
+use smol::Timer;
+use std::time::Duration;
 use std::net::{TcpListener, TcpStream};
-use futures::AsyncWriteExt;
+use futures::io::{AsyncWriteExt};
 use async_dup::Arc;
 use smol::{io, Async};
 use async_std::io::ReadExt;
+use std::str;
 
-async fn pong(mut stream: Async<TcpStream>) -> io::Result<()> {
-    //stream.read(&mut [0; 128])?;
-    //let mut buffer = vec![0; 128];
-    let mut buffer = String::new();
-    stream.read_to_string(&mut buffer).await?;
+async fn sleep(dur: Duration) {
+    Timer::after(dur).await;
+}
+
+async fn read_ping(mut stream: Async<TcpStream>) -> io::Result<()> {
+    let mut buffer = [0u8; 4];
+    stream.read_exact(&mut buffer).await?;
+    let buffer = str::from_utf8(&buffer).unwrap();
     println!("{}", buffer);
-    //println!("{:?}", stream);
-    //let mut stream = async_dup::Mutex::new(stream);
+    sleep(Duration::from_secs(1)).await;
+    smol::spawn(write_pong(stream)).detach();
+    Ok(())
+}
+
+async fn write_pong(stream: Async<TcpStream>) -> io::Result<()> {
     let mut writer = Arc::new(stream);
     writer.write_all(b"Pong").await?;
-    //println!("wrong pong");
-
-    //let mut reader = writer.clone();
-    //reader.read_to_string(&mut buffer).await?;
-    //println!("{}", buffer);
-    //println!("Wrote pong to stream");
-    //io::copy(&stream, &mut &stream).await?;
-    // writes to stream, copies to stream
+    //println!("Wrote Pong to stream");
     Ok(())
 }
 
@@ -44,8 +37,7 @@ fn main() -> io::Result<()> {
         loop {
             let (stream, peer_addr) = listener.accept().await?;
             println!("Accepted client: {}", peer_addr);
-            // if statement here
-            smol::spawn(pong(stream)).detach();
+            smol::spawn(read_ping(stream)).detach();
         }
     })
 }
