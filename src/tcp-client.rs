@@ -21,9 +21,9 @@ async fn hello_loop() {
     }
 }
 
-async fn pingpong(test: Arc<Executor<'_>>)  -> io::Result<()> {
+async fn pingpong(ex: Arc<Executor<'_>>)  -> io::Result<()> {
     // spawn hello loop in parallel
-    test.spawn(async {
+    ex.spawn(async {
         hello_loop().await;
     })
     .detach();
