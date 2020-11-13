@@ -1,5 +1,5 @@
-//! cargo run --example tcp-server
-//! cargo run --example tcp-client
+//! cargo run --bin tcp-server
+//! cargo run --bin tcp-client
 
 use async_dup::Arc;
 use async_std::io::ReadExt;
