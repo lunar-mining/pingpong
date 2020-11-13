@@ -1,11 +1,11 @@
-use smol::Timer;
-use std::time::Duration;
-use std::net::{TcpListener, TcpStream};
-use futures::io::{AsyncWriteExt};
 use async_dup::Arc;
-use smol::{io, Async};
 use async_std::io::ReadExt;
+use futures::io::AsyncWriteExt;
+use smol::Timer;
+use smol::{io, Async};
+use std::net::{TcpListener, TcpStream};
 use std::str;
+use std::time::Duration;
 
 async fn sleep(dur: Duration) {
     Timer::after(dur).await;
@@ -32,7 +32,7 @@ fn main() -> io::Result<()> {
     smol::block_on(async {
         let listener = Async::<TcpListener>::bind(([127, 0, 0, 1], 7000))?;
         println!("Listening on {}", listener.get_ref().local_addr()?);
-        println!("Now start a TCP client."); 
+        println!("Now start a TCP client.");
 
         loop {
             let (stream, peer_addr) = listener.accept().await?;
