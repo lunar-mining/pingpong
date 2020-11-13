@@ -44,13 +44,13 @@ async fn pingpong(ex: Arc<Executor<'_>>)  -> io::Result<()> {
 
 fn main() -> io::Result<()> {
     let ex = Executor::new();
-    let ex_clone = Arc::new(ex);
-    let ex1 = ex_clone.clone();
-    ex_clone.spawn(async {
-        pingpong(ex1).await;
+    let ex_arc = Arc::new(ex);
+    let ex_clone = ex_arc.clone();
+    ex_arc.spawn(async {
+        pingpong(ex_clone).await;
     })
     .detach();
-    thread::spawn(move || future::block_on(ex_clone.run(future::pending::<()>())));
+    thread::spawn(move || future::block_on(ex_arc.run(future::pending::<()>())));
     thread::sleep(Duration::from_secs(5));
     Ok(())
 }
